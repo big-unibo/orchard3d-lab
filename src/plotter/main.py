@@ -12,6 +12,7 @@ warnings.filterwarnings("ignore")
 import os
 import time
 
+
 def meteo(
     tuning_folder=os.path.join("data", "errano_tuning"),
     evaluation_folder=os.path.join("data", "errano_evaluation_1gg"),
@@ -79,7 +80,10 @@ def meteo(
             meteo_vars[meteo_var], fontsize=12
         )
         axes[int(idx / nrows), idx % nrows].set_title(
-            meteo_var.replace("_", " ").capitalize(), fontsize=15
+            "Air relative humidity"
+            if meteo_var == "air_humidity"
+            else meteo_var.replace("_", " ").capitalize(),
+            fontsize=15,
         )
         axes[int(idx / nrows), idx % nrows].tick_params(axis="both", labelsize=12)
 
@@ -88,6 +92,7 @@ def meteo(
     fig.set_size_inches(13, 6)
     fig.savefig(os.path.join(output_folder, "meteo.pdf"))
     fig.savefig(os.path.join(output_folder, "meteo.png"))
+
 
 def ground_potential(
     tuning_folder=os.path.join("data", "errano_tuning"),
@@ -140,7 +145,7 @@ def ground_potential(
         # ax.set_xticks([0, df.shape[0]])
         if idx < 8:
             ax.tick_params(length=0)
-        ax.set_ylabel("cbar",  fontsize=12)
+        ax.set_ylabel("cbar", fontsize=12)
         ax.tick_params(axis="both", labelsize=12)
         ax.set_title(
             meteo_var.replace("y0_", "")
@@ -229,22 +234,19 @@ def forecast_avg(
     df.plot(ax=ax)
     ax.set_ylim([0, 1.5])
     ax.set_xlabel("")
-    ax.set_ylabel("Error",  fontsize=12)
+    ax.set_ylabel("Error", fontsize=12)
     ax.tick_params(axis="both", labelsize=12)
     fig.set_size_inches(13, 6)
     plt.legend(fontsize=12)
     plt.tight_layout()
-    fig.savefig(
-        os.path.join(output_folder, f"forecasting_avg.pdf")
-    )
-    fig.savefig(
-        os.path.join(output_folder, f"forecasting_avg.png")
-    )
+    fig.savefig(os.path.join(output_folder, f"forecasting_avg.pdf"))
+    fig.savefig(os.path.join(output_folder, f"forecasting_avg.png"))
+
 
 def forecast_std(
     obs_folder=os.path.join("data", "errano_evaluation_1gg"),
     forecast_folder=os.path.join("data", "errano_evaluation"),
-    output_folder=os.path.join("plots")
+    output_folder=os.path.join("plots"),
 ):
     support_dict = {
         "obs": os.path.join(obs_folder, "obs_data", "waterPotential.csv"),
@@ -336,20 +338,16 @@ def forecast_std(
     )
     ax.legend()
     ax.set_xlabel("")
-    ax.set_ylabel("cbar",  fontsize=12)
+    ax.set_ylabel("cbar", fontsize=12)
     ax.tick_params(axis="both", labelsize=12)
     fig.set_size_inches(13, 6)
     plt.legend(fontsize=12)
     handles, labels = plt.gca().get_legend_handles_labels()
-    order = [0,3,2,1]
-    plt.legend([handles[idx] for idx in order],[labels[idx] for idx in order])
+    order = [0, 3, 2, 1]
+    plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order])
     plt.tight_layout()
-    fig.savefig(
-        os.path.join(output_folder, f"forecasting_std.pdf")
-    )
-    fig.savefig(
-        os.path.join(output_folder, f"forecasting_std.png")
-    )
+    fig.savefig(os.path.join(output_folder, f"forecasting_std.pdf"))
+    fig.savefig(os.path.join(output_folder, f"forecasting_std.png"))
     return df
 
 
@@ -407,10 +405,7 @@ def correlation_wc(
 
     forecasting_dict = {}
     for data_type, input_path in support_dict.items():
-        forecasting_dict[data_type] = (
-            pd.read_csv(input_path)
-            .set_index("timestamp")
-        )
+        forecasting_dict[data_type] = pd.read_csv(input_path).set_index("timestamp")
         forecasting_dict[data_type] = forecasting_dict[data_type].reindex(
             sorted(forecasting_dict[data_type].columns), axis=1
         )
@@ -444,11 +439,17 @@ def correlation_wc(
         ax[idx].grid()
         ax[idx].set_ylim([0.05, 0.25])
         ax[idx].set_xlim([0.05, 0.25])
-        ax[idx].set_title(data_type.replace("gg", "-day") + ("s" if data_type != "1gg" else "") + " horizon", fontsize=22)
-        ax[idx].set_xlabel("Observed WC", fontsize=18)
+        ax[idx].set_title(
+            data_type.replace("gg", "-day")
+            + ("s" if data_type != "1gg" else "")
+            + " horizon",
+            fontsize=22,
+        )
+        ax[idx].set_xlabel("Observed WC (%)", fontsize=18)
         ax[idx].tick_params(axis="both", labelsize=18)
+        ax[idx].set_yticks([0.05 + i * 0.05 for i in range(5)])
         if idx == 0:
-            ax[idx].set_ylabel("Forecasted WC", fontsize=18)
+            ax[idx].set_ylabel("Forecasted WC (%)", fontsize=18)
     fig.set_size_inches(20, 6)
     plt.tight_layout()
     fig.savefig(
@@ -463,6 +464,7 @@ def correlation_wc(
             f"correlation_wc.png",
         )
     )
+
 
 def summary_tuning_budget(
     obs_folder=os.path.join("data", "errano_evaluation_1gg"),
