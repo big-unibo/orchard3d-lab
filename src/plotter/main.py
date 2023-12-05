@@ -258,14 +258,12 @@ def forecast_std(
 
     forecasting_dict = {}
     for data_type, input_path in support_dict.items():
-        forecasting_dict[data_type] = (
-            pd.DataFrame({"timestamp": [1655251200]})
-            .append(
-                pd.read_csv(input_path),
-                ignore_index=True,
-            )
-            .set_index("timestamp")
+        forecasting_dict[data_type] = pd.concat(
+            [pd.DataFrame({"timestamp": [1655251200]}), pd.read_csv(input_path)],
+            ignore_index=True,
+            axis=0,
         )
+        forecasting_dict[data_type] = forecasting_dict[data_type].set_index("timestamp")
         forecasting_dict[data_type][forecasting_dict[data_type] > -20] = -20
         forecasting_dict[data_type] = forecasting_dict[data_type].reindex(
             sorted(forecasting_dict[data_type].columns), axis=1
@@ -297,7 +295,9 @@ def forecast_std(
                 for i in range(df.shape[0])
             ]
     df["average"] = df[[c for c in df.columns if c.endswith("_obs")]].mean(axis=1)
-    df = df.append(pd.DataFrame({"timestamp": [1655251200]}), ignore_index=True)
+    df = pd.concat(
+        [df, pd.DataFrame({"timestamp": [1655251200]})], ignore_index=True, axis=0
+    )
     df = df.set_index("timestamp")
     # df = df[new_columns]
     df.index = pd.to_datetime(df.index, unit="s")
